@@ -65,6 +65,7 @@ class StopPanel:
         self.results = queue.Queue()
         self.poll_busy = False
         self.stop_busy = False
+        self.held = False
 
         root.title('机器人本机停车面板')
         root.geometry('520x290')
@@ -107,6 +108,7 @@ class StopPanel:
         self.root.after(500, self._poll)
 
     def stop(self):
+        self.held = True
         if self.stop_busy:
             return
         self.stop_busy = True
@@ -133,6 +135,9 @@ class StopPanel:
                     else:
                         message, color = assess_state(value)
                         self.message.configure(text=message, fg=color)
+                        if self.held and not (value.get('estop') and
+                                              (value.get('safety') or {}).get('estop')):
+                            self.stop()
         except queue.Empty:
             pass
         self.root.after(100, self._drain)
